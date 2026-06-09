@@ -264,10 +264,13 @@ async function toggleStep(phaseId, stepIndex) {
   showIndicator('Сохранение...', '#EF9F27', false);
   try {
     const res = await fetch(FUNCTION_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ password: PWD_ADMIN, data: currentData })
-    });
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${SUPABASE_KEY}`
+  },
+  body: JSON.stringify({ password: PWD_ADMIN, data: currentData })
+});
     const json = await res.json();
     if (!res.ok) throw new Error(json.error);
     showIndicator('Сохранено ✓', '#3B6D11', true);
