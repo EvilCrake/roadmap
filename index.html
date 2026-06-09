@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Роудмап автоматизации — г.о. Химки</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
+.lock-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.lock-card{background:#fff;border-radius:16px;border:0.5px solid #e0e0dc;padding:2.5rem;width:100%;max-width:360px;text-align:center}
+.lock-card h2{font-size:18px;font-weight:500;margin-bottom:6px}
+.lock-card p{font-size:13px;color:#888;margin-bottom:1.5rem}
+.lock-card input{width:100%;padding:10px 14px;border:0.5px solid #d0d0cc;border-radius:8px;font-size:15px;outline:none;margin-bottom:10px;background:#fafaf8}
+.lock-card input:focus{border-color:#7F77DD}
+.lock-card button{width:100%;padding:10px;background:#7F77DD;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500}
+.lock-card button:hover{background:#534AB7}
+.lock-error{color:#E24B4A;font-size:13px;margin-top:8px;display:none}
+.app{display:none;max-width:860px;margin:0 auto;padding:2rem 1rem}
+.app-header{margin-bottom:2rem}
+.app-header h1{font-size:20px;font-weight:500;margin-bottom:4px}
+.app-header p{font-size:13px;color:#888}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2rem}
+.stat-card{background:#fff;border-radius:8px;border:0.5px solid #e0e0dc;padding:12px 14px}
+.stat-label{font-size:12px;color:#888;margin-bottom:4px}
+.stat-value{font-size:22px;font-weight:500}
+.stat-value span{font-size:13px;font-weight:400;color:#888}
+.phase{margin-bottom:1rem;border:0.5px solid #e0e0dc;border-radius:12px;overflow:hidden;background:#fff}
+.phase-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.phase-header:hover{background:#fafaf8}
+.phase-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.phase-title{font-size:15px;font-weight:500;flex:1}
+.phase-meta{font-size:12px;color:#888;margin-right:8px}
+.phase-progress-wrap{width:80px;height:4px;background:#e8e8e4;border-radius:2px;overflow:hidden;margin-right:12px}
+.phase-progress-bar{height:100%;border-radius:2px;transition:width 0.6s ease}
+.phase-pct{font-size:12px;font-weight:500;min-width:30px;text-align:right}
+.chevron{font-size:16px;color:#888;transition:transform 0.2s}
+.phase-body{border-top:0.5px solid #e8e8e4}
+.step{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:0.5px solid #e8e8e4}
+.step:last-child{border-bottom:none}
+.step-check{width:20px;height:20px;border-radius:50%;border:1.5px solid #d0d0cc;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-check.done{border-color:transparent}
+.step-check i{font-size:11px;color:#fff;display:none}
+.step-check.done i{display:block}
+.step-info{flex:1}
+.step-name{font-size:14px;margin-bottom:2px}
+.step-name.done{color:#aaa;text-decoration:line-through}
+.step-desc{font-size:12px;color:#888}
+.step-tag{font-size:11px;padding:2px 8px;border-radius:20px;margin-left:auto;flex-shrink:0;align-self:center}
+.tag-infra{background:#EEEDFE;color:#534AB7}
+.tag-kpi{background:#FAEEDA;color:#854F0B}
+.tag-bot{background:#E6F1FB;color:#185FA5}
+.tag-monitor{background:#EAF3DE;color:#3B6D11}
+.tag-ai{background:#FBEAF0;color:#993556}
+.collapsed .phase-body{display:none}
+.collapsed .chevron{transform:rotate(-90deg)}
+.readonly-note{font-size:12px;color:#aaa;text-align:center;margin-top:1.5rem;padding-bottom:1rem}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="lock-screen" id="lock-screen">
+  <div class="lock-card">
+    <div style="font-size:32px;margin-bottom:12px"></div>
+    <h2>Цивхим</h2>
+    <p>Роудмап цифровой автоматизации</p>
+    <input type="password" id="pwd-input" placeholder="Введите пароль" onkeydown="if(event.key==='Enter')checkPwd()">
+    <button onclick="checkPwd()">Войти</button>
+    <div class="lock-error" id="lock-error">Неверный пароль</div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="app-header">
+    <h1>Автоматизация г.о. Химки</h1>
+    <p>Роудмап внедрения цифровых инструментов · только для просмотра</p>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Прогресс</div><div class="stat-value" id="pct-total">0<span>%</span></div></div>
+    <div class="stat-card"><div class="stat-label">Выполнено шагов</div><div class="stat-value"><span id="done-count">0</span><span> / <span id="total-count">0</span></span></div></div>
+    <div class="stat-card"><div class="stat-label">Активных этапов</div><div class="stat-value" id="active-phases">0</div></div>
+    <div class="stat-card"><div class="stat-label">Завершено этапов</div><div class="stat-value" id="done-phases">0</div></div>
+  </div>
+  <div id="phases-container"></div>
+  <div class="readonly-note">Страница обновляется по мере реализации · только для просмотра</div>
+</div>
+
+<script>
+const PASSWORD = 'himki2026';
+
+const phases = [
+  {
+    id:'infra',title:'Инфраструктура',color:'#7F77DD',tag:'tag-infra',tagLabel:'Инфра',
+    steps:[
+      {name:'Аренда VPS сервера',desc:'Минимальный VPS ~300 руб/мес',done:false},
+      {name:'Настройка PostgreSQL',desc:'База данных для хранения обращений и аналитики',done:false},
+      {name:'Настройка Nginx + SSL',desc:'Обратный прокси и HTTPS сертификат',done:false},
+      {name:'Настройка PM2',desc:'Менеджер процессов для автозапуска ботов',done:false},
+    ]
+  },
+  {
+    id:'kpi',title:'KPI уполномоченных',color:'#EF9F27',tag:'tag-kpi',tagLabel:'KPI',
+    steps:[
+      {name:'Google Таблица с защитой диапазонов',desc:'7 уполномоченных, каждый редактирует только свои строки',done:false},
+      {name:'Поля руководителя закрыты',desc:'Доверие к власти и исполнительская дисциплина — только руководитель',done:false},
+      {name:'Сводный лист с автоподсчётом',desc:'Итоговый KPI по весам считается автоматически',done:false},
+      {name:'Инструкция для уполномоченных',desc:'Как заполнять, как работает защита диапазонов',done:false},
+      {name:'Шаблоны по месяцам',desc:'Копирование листа на каждый новый месяц',done:false},
+    ]
+  },
+  {
+    id:'bot-complaints',title:'Бот обращений жителей',color:'#185FA5',tag:'tag-bot',tagLabel:'Бот',
+    steps:[
+      {name:'Регистрация Telegram бота',desc:'Получить токен через @BotFather',done:false},
+      {name:'Бета-версия с ключевыми словами',desc:'Маршрутизация по категориям: УК, Ресурсы, Администрация',done:false},
+      {name:'Подключение к VPS',desc:'Запуск бота на сервере через PM2',done:false},
+      {name:'База данных обращений',desc:'SQLite или PostgreSQL для хранения и аналитики',done:false},
+      {name:'Уведомления ответственным в личку',desc:'Каждое обращение уходит нужному исполнителю',done:false},
+      {name:'Подключение ИИ для классификации',desc:'Groq/Gemini для умного определения категории',done:false},
+    ]
+  },
+  {
+    id:'monitor',title:'Мониторинг Telegram-каналов',color:'#3B6D11',tag:'tag-monitor',tagLabel:'Монитор',
+    steps:[
+      {name:'Получение Telegram API ключей',desc:'API_ID и API_HASH на my.telegram.org',done:false},
+      {name:'Настройка Google Sheets API',desc:'Service Account + credentials.json',done:false},
+      {name:'Получение Groq/Gemini API ключа',desc:'Бесплатный tier для анализа постов',done:false},
+      {name:'Скрипт мониторинга 50 каналов',desc:'Telethon + анализ постов + запись в таблицу',done:false},
+      {name:'Листы Posts и Summary',desc:'Структура таблицы с автосводкой по категориям',done:false},
+      {name:'Расписание запуска (cron)',desc:'Автоматический запуск раз в неделю',done:false},
+    ]
+  },
+  {
+    id:'ai',title:'ИИ-бот для жителей (база знаний)',color:'#993556',tag:'tag-ai',tagLabel:'ИИ',
+    steps:[
+      {name:'Формирование базы знаний',desc:'Контакты УК, нормативы, жизненные ситуации — закрытый контур',done:false},
+      {name:'Структура: вопрос-ответ-категория',desc:'PostgreSQL на VPS, наполняет администратор',done:false},
+      {name:'Бот бета без ИИ',desc:'Поиск по ключевым словам, быстрый запуск',done:false},
+      {name:'Подключение нейросети',desc:'RAG на базе знаний, ответы только по загруженным данным',done:false},
+      {name:'Интеграция с МАКС (если есть API)',desc:'Подача обращений напрямую в систему города',done:false},
+    ]
+  }
+];
+
+function checkPwd() {
+  const val = document.getElementById('pwd-input').value;
+  if (val === PASSWORD) {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    render();
+  } else {
+    document.getElementById('lock-error').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+  }
+}
+
+function updateStats() {
+  let total=0,done=0,active=0,doneP=0;
+  phases.forEach(p => {
+    const d = p.steps.filter(s=>s.done).length;
+    total += p.steps.length; done += d;
+    if(d>0 && d<p.steps.length) active++;
+    if(d===p.steps.length) doneP++;
+  });
+  const pct = total>0 ? Math.round(done/total*100) : 0;
+  document.getElementById('pct-total').innerHTML = pct+'<span>%</span>';
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('active-phases').textContent = active;
+  document.getElementById('done-phases').textContent = doneP;
+}
+
+function render() {
+  const container = document.getElementById('phases-container');
+  container.innerHTML = '';
+  phases.forEach(phase => {
+    const done = phase.steps.filter(s=>s.done).length;
+    const pct = Math.round(done/phase.steps.length*100);
+    const el = document.createElement('div');
+    el.className = 'phase';
+    el.setAttribute('data-phase', phase.id);
+    el.innerHTML = `
+      <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+        <div class="phase-dot" style="background:${phase.color}"></div>
+        <div class="phase-title">${phase.title}</div>
+        <div class="phase-meta">${done}/${phase.steps.length}</div>
+        <div class="phase-progress-wrap"><div class="phase-progress-bar" style="background:${phase.color};width:${pct}%"></div></div>
+        <div class="phase-pct" style="color:${pct===100?'#3B6D11':'#888'}">${pct}%</div>
+        <i class="ti ti-chevron-down chevron"></i>
+      </div>
+      <div class="phase-body">
+        ${phase.steps.map(step=>`
+          <div class="step">
+            <div class="step-check ${step.done?'done':''}" style="${step.done?'background:'+phase.color:''}">
+              <i class="ti ti-check"></i>
+            </div>
+            <div class="step-info">
+              <div class="step-name ${step.done?'done':''}">${step.name}</div>
+              <div class="step-desc">${step.desc}</div>
+            </div>
+            <div class="step-tag ${phase.tag}">${phase.tagLabel}</div>
+          </div>
+        `).join('')}
+      </div>`;
+    container.appendChild(el);
+  });
+  updateStats();
+}
+</script>
+</body>
+</html>
