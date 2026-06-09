@@ -263,17 +263,11 @@ async function toggleStep(phaseId, stepIndex) {
   render();
   showIndicator('Сохранение...', '#EF9F27', false);
   try {
-    const res = await fetch(FUNCTION_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
-    'apikey': SUPABASE_KEY
-  },
-  body: JSON.stringify({ password: PWD_ADMIN, data: currentData })
-});
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error);
+    const { error } = await sb.rpc('save_roadmap_data', {
+      admin_pwd: PWD_ADMIN,
+      roadmap_data: currentData
+    });
+    if (error) throw error;
     showIndicator('Сохранено ✓', '#3B6D11', true);
   } catch(e) {
     showIndicator('Ошибка сохранения', '#E24B4A', false);
